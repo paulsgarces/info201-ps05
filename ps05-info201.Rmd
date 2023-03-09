@@ -1,0 +1,216 @@
+---
+title: "5problemset"
+author: "Paul Garces"
+date: "2023-03-07"
+output: html_document
+---
+
+```{r read packages}
+library(ggplot2)
+library(dplyr)
+library(tidyverse)
+```
+
+# Question 1
+### 1.
+```{r}
+openfile <- read_delim("gapminder.csv")
+openfile
+```
+
+### 2.
+```{r}
+ncol(openfile)
+nrow(openfile)
+```
+
+### 3.
+```{r}
+head(openfile, 3)
+```
+
+The data looks fine, there are some NA's however, but they do not really affect the data.
+# Question 2
+### 1.
+```{r question 2}
+n_distinct(openfile$name, na.rm = TRUE)
+n_distinct(openfile$iso3, na.rm = TRUE)
+n_distinct(openfile$iso2, na.rm = TRUE)
+```
+
+### 2.
+#### a
+```{r}
+openfile %>% filter(is.na(iso2)) %>% group_by(name) %>% distinct(iso2)
+```
+
+#### b
+```{r}
+openfile %>% filter(is.na(name)) %>% group_by(name) %>% distinct(iso3)
+```
+
+### 3.
+```{r}
+min(openfile$time, na.rm = TRUE)
+max(openfile$time, na.rm = TRUE)
+```
+
+# Question 3
+### 1.
+```{r}
+openfile %>% group_by(time) %>% summarize(na_co2 = sum(is.na(co2)),
+                                          na_co2_PC = sum(is.na(co2_PC))) %>% arrange(desc(na_co2), na_co2_PC)
+```
+The years with the most missing values were 2017, 2018, and 2019.
+
+### 2.
+```{r}
+usa <- openfile %>% filter(name == 'United States of America') 
+china <- openfile %>% filter(name == 'China')
+india <- openfile %>% filter(name == 'India')
+argentina <- openfile %>% filter(name == "Argentina")
+ecuador <- openfile %>% filter(name == "Ecuador")
+
+  
+ggplot(data = openfile) + 
+  geom_line(data = usa, aes(x = time, y = co2, color = "USA")) +
+  geom_line(data = china, aes(x = time, y = co2, color = "China")) +
+  geom_line(data = india, aes(x = time, y = co2, color = "India")) +
+  geom_line(data = argentina, aes(x = time, y = co2, color = "Argentina")) +
+  geom_line(data = ecuador, aes(x = time, y = co2, color = "Ecuador"))
+```
+
+It can be noted that China has had the biggest increase in CO2 emission given the certain time frame, with the 
+
+United States steadily keeping up, even though it is not as much as China. India has also seen an increase in 
+
+CO2 emissions after having a steady increase as well. Ecuador and Argentina have had a relatively slow increase
+
+in CO2 emission compared to the other countries in the graph.
+
+### 3.
+```{r}
+ggplot(data = openfile) + 
+  geom_line(data = usa, aes(x = time, y = co2_PC, color = "USA")) +
+  geom_line(data = china, aes(x = time, y = co2_PC, color = "China")) +
+  geom_line(data = india, aes(x = time, y = co2_PC, color = "India")) +
+  geom_line(data = argentina, aes(x = time, y = co2_PC, color = "Argentina")) +
+  geom_line(data = ecuador, aes(x = time, y = co2_PC, color = "Ecuador")) 
+```
+
+When looking at CO2 emissions per capita, it can be noted that the United States is the biggest producer between all countries.
+
+However, while Argentina is in second for most CO2 emissions per capita, it must also be observed that China has the largest increase.
+
+Ecuador is in a close third place and India, while increasing produces the least amount of emissions per capita.
+
+### 4.
+```{r}
+openfile %>% filter(!is.na(region), time == "2016") %>% group_by(region) %>% summarize(avgco2PC = mean(co2_PC, na.rm = TRUE))
+```
+
+Based on the graph, it can be noted that Asia and Europe are both the top producers of CO2 per capita between all continents. 
+
+Africa being the lowest between all that are listed and the Americas being third and Oceania being 4.
+
+### 5.
+``` {r}
+openfile %>% filter(!is.na(region), time == "1960" | time == "2016") %>% group_by(region, time) %>%
+  summarize(avgco2PC = mean(co2_PC, na.rm  = TRUE)) %>% ggplot(aes(region, avgco2PC, fill = factor(time))) +
+  geom_bar(stat = "identity", position = position_dodge())
+```
+
+### 6.
+```{r}
+openfile %>%
+  filter(!is.na(co2_PC), time == "2016", !is.na(name), !is.na(region)) %>%
+  group_by(region, name) %>%
+  arrange(region, co2_PC) %>%
+  group_by(region) %>%
+  filter(rank(co2_PC) <= 3 | rank(desc(co2_PC)) <= 3) %>% 
+  select(region, name, co2_PC)
+```
+
+# Question 4
+### 1.
+```{r}
+gdple1960 <- openfile %>% 
+  filter(!is.na(GDP_PC), !is.na(lifeExpectancy), time =="1960", !is.na(region)) %>% 
+  ggplot(aes(x = GDP_PC, y = lifeExpectancy)) +
+  geom_point(aes(size = totalPopulation, color = region))
+gdple1960
+```
+
+There does appear to be a relationship between GDP per capita in a country and the life expectancy, which means that the higher the GDP per capita, the higher the life expectancy.
+
+It can be noted that Africa and Asia had relatively low GDP per capita and life expectancy, while the opposite is the case for Europe and Asia.
+
+It also appears that medium to small size countries have a higher GDP per capita and life expectancy when compared to larger ones.
+
+### 2.
+```{r}
+gdple2019 <- openfile %>% 
+  filter(!is.na(GDP_PC), !is.na(lifeExpectancy), time =="2019", !is.na(region)) %>% 
+  ggplot(aes(x = GDP_PC, y = lifeExpectancy)) +
+  geom_point(aes(size = totalPopulation, color = region))
+gdple2019
+```
+
+### 3.
+
+When comparing the graphs it can be seen that throughout the years GDP per capita and life expectancy has increased a substantial amount through the years.
+
+Bigger countries have done better since the bigger data points have moved up which means that GDP PC and life expectancy has gone up. 
+
+The Americas, Europe and Oceania have the highest GDP PC and life expectancy with African counties being in the bottom.
+
+### 4.
+```{r}
+openfile %>% 
+  filter(!is.na(region), !is.na(lifeExpectancy)) %>%
+  filter(time == "1960" | time == "2019") %>% 
+  group_by(region, time) %>%
+  summarize(ave_lifeExpectancy = mean(lifeExpectancy))
+```
+
+### 5.
+```{r}
+openfile %>% 
+  filter(!is.na(region), !is.na(lifeExpectancy)) %>%
+  filter(time == "1960" | time == "2019") %>% 
+  group_by(region, time) %>%
+  summarize(avg_life = mean(lifeExpectancy)) %>% 
+  mutate(growth_le = avg_life-lag(avg_life)) %>%
+  arrange(-growth_le)
+```
+
+Asian and African have had the highest growth in life expectancy from 1960 to 2019, while European countries have seen the lowest change.
+
+The Americas and Oceania have also experienced an increase in life expectancy.
+
+### 6.
+```{r}
+openfile %>% filter(!is.na(GDP_PC), time == "1960" | time == "2019") %>%
+  ggplot(aes(x = GDP_PC, fill = factor(time))) + geom_histogram(position = position_dodge())
+```
+
+### 7.
+```{r}
+openfile %>% filter(!is.na(lifeExpectancy), !is.na(name)) %>% filter(time == "1960" | time == "2019") %>%
+  group_by(time) %>% mutate(rank = rank(desc(lifeExpectancy))) %>% filter(name == "United States of America") %>%
+  reframe(name, time, rank)
+```
+
+### 8.
+```{r}
+openfile %>% 
+  filter(!is.na(lifeExpectancy), !is.na(name)) %>%
+  filter(time == "1960" | time == "2019") %>%
+  group_by(time) %>% 
+  mutate(rank = rank(desc(lifeExpectancy))) %>%
+  mutate(countrybyyear = n_distinct(name)) %>% 
+  mutate(ratio = rank/countrybyyear) %>% 
+  reframe(name, time, ratio) %>% 
+  filter(name == "United States of America")
+```
+This homework took me about 8-10 hours to complete
